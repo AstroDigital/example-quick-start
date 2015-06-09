@@ -1,0 +1,65 @@
+<head>
+    <title>Astro Digital Quick Start Example</title>
+    <link rel="stylesheet" href="//cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <script src="//cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+      }
+
+      .header {
+        position: absolute;
+        top: 0;
+        height: 50px;
+        width: 100%;
+        background: #3E5972;
+      }
+
+      .logo {
+        float: left;
+        padding: 12px;
+      }
+
+      .logo img {
+        height: 26px;
+        width: auto;
+      }
+
+      #map {
+        position: absolute;
+        top: 50px;
+        bottom: 0;
+        width: 100%;
+      }
+    </style>
+</head>
+
+<body>
+  <div class="header">
+    <div class="logo">
+      <a href="http://astrodigital.com/"><img src="images/astrodigital_white_tight.png" /></a>
+    </div>
+  </div>
+  <div id="map"></div>
+  <script type="text/javascript">
+    // Your Mapbox token goes here
+    var accessToken = 'pk.eyJ1IjoiYXN0cm9kaWdpdGFsIiwiYSI6ImNVb1B0ZkEifQ.IrJoULY2VMSBNFqHLrFYew';
+
+    // Create new Leaflet map and set initial view
+    var map = new L.Map('map').setView([<%= imageCenter[0] %>, <%= imageCenter[1] %>], 9);
+
+    // Add base layer
+    var mbUrl = 'https://{s}.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={token}';
+    L.tileLayer(mbUrl, {id: 'astrodigital.00ffdda1', token: accessToken, minZoom: 4, maxZoom: 12}).addTo(map);
+
+    // Add latest processed Astro Digital image
+    L.tileLayer(mbUrl, {id: '<%= sceneID %>', token: accessToken}).addTo(map);
+
+    // Force the page to reload on an interval to make sure we get the latest image
+    setInterval(function () {
+      window.location.reload(true);
+    }, <%= pageReloadInterval %>);
+  </script>
+</body>
