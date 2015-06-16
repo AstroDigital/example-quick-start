@@ -6,9 +6,11 @@ var app = express();
 
 /**
  * User email information about the image we're looking for, both processing method and
- * center coordinates. This must be entered.
+ * center coordinates. These must be entered.
+ *
+ * List of methods can be found at https://api.astrodigital.com/v1/methods.
  */
-var method = { name: 'trueColor', id: 1 };
+var method = 'trueColor';
 var imageCenter = [37.7577, -122.4376];
 var email = '';
 
@@ -60,6 +62,7 @@ var runSearchRequest = function (callback) {
 
   request(baseURL + searchString, function (err, res, body) {
     if (err || res.statusCode !== 200) {
+      err = err || 'Looks like we were unable to find any matches for your search.';
       return callback(err, null);
     }
 
@@ -114,7 +117,7 @@ var publishScene = function (sceneID) {
     satellite: 'l8',
     sceneID: sceneID,
     email: email,
-    process: method.name
+    process: method.code
   };
 
   request.post({ url: baseURL + '/publish', formData: formData },
@@ -198,23 +201,50 @@ var handleSearchResult = function (err, sceneID) {
  */
 if (!email || email === '' ||
     !imageCenter || imageCenter[0] === '' || imageCenter[1] === '' ||
-    !method || !method.name || !method.name === '' || !method.id || method.id === '') {
+    !method || method === '') {
   console.error('Uh oh, you are missing some required input data');
   process.exit(1);
 }
 
 /**
- * Kick off the entire process. This will run a search request, get the latest
+ * Kick off the entire process after getting supported processing methods
+ * from API. This will run a search request, get the latest
  * image ID, check to see its status in the processing pipeline, execute
  * actions based on the status and will eventually update the `latestImage`
  * property when everything is done.
  *
  * It'll do this forever...
  */
-runSearchRequest(handleSearchResult);
-setInterval(function () {
+var url = baseURL + '/methods';
+request(url, function (err, res, body) {
+  if (err || res.statusCode !== 200) {
+    err = err || 'Unable to retrieve methods from API.';
+    return console.error(err);
+  }
+
+  // Parse the response and save as available methods
+  var data = JSON.parse(body);
+  var processingMethods = data.results;
+
+  // Find the processing method we're looking for and save the object
+  for (var i = 0; i < processingMethods.length; i++) {
+    if (processingMethods[i].code === method) {
+      method = processingMethods[i];
+    }
+  }
+
+  // Make sure we found the method we are looking for, if not, send an error
+  if (typeof method !== 'object') {
+    console.error('Oh no, we could not find the method you are looking for.');
+    process.exit(1);
+  }
+
+  // Our main run loop
   runSearchRequest(handleSearchResult);
-}, searchInterval);
+  setInterval(function () {
+    runSearchRequest(handleSearchResult);
+  }, searchInterval);
+});
 
 /*
  * Start a simple Express server running so that we can make a request to load
