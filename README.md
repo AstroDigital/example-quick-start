@@ -1,3 +1,5 @@
+_Note that this code is for v1 of the platform which is being deprecated in favor of [v2](https://docs.astrodigital.com/v2.0)._
+
 # Code example for [quick start tutorial](http://docs.astrodigital.com/v1.0/docs/getting-started)
 
 ## Overview
